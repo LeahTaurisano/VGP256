@@ -202,6 +202,23 @@ set_target_properties(Visual PROPERTIES
 )
 target_link_libraries(Visual PUBLIC Math Platform ImGui)
 
+#=======================Systems
+
+set(SYSTEMS_MODULE_DIR "${LIB_PATH}/Systems")
+set( SystemsSourceList
+"${SYSTEMS_MODULE_DIR}/Graphics.cpp"
+"${SYSTEMS_MODULE_DIR}/Graphics.h"
+)
+
+add_library(Systems ${SystemsSourceList})
+target_include_directories(Systems PUBLIC "${SYSTEMS_MODULE_DIR}")
+target_compile_features(Systems PUBLIC cxx_std_20)
+target_compile_options(Systems PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>, /W4 /WX,-Wall -Wextra -Wpedantic -Werror>)
+source_group(TREE "${SYSTEMS_MODULE_DIR}" FILES ${SystemsSourceList})
+set_target_properties(Systems PROPERTIES
+	FOLDER "Libraries"
+)
+target_link_libraries(Systems PUBLIC Math Platform Visual entt)
 
 #=======================#====EXECUTABLES=====#=======================
 #=======================PhysicsDemo
