@@ -183,6 +183,8 @@ set( VisualSourceList
 "${VISUAL_MODULE_DIR}/RenderingContext.cpp"
 "${VISUAL_MODULE_DIR}/RenderingContext.h"
 "${VISUAL_MODULE_DIR}/Visual.cpp"
+"${VISUAL_MODULE_DIR}/VisualGeometry.h"
+"${VISUAL_MODULE_DIR}/VisualGeometry.cpp"
 "${VISUAL_MODULE_DIR}/Visual.h"
 "${VISUAL_MODULE_DIR}/VisualDebug.h"
 "${VISUAL_MODULE_DIR}/MeshData.cpp"
@@ -208,6 +210,8 @@ set(SYSTEMS_MODULE_DIR "${LIB_PATH}/Systems")
 set( SystemsSourceList
 "${SYSTEMS_MODULE_DIR}/Graphics.cpp"
 "${SYSTEMS_MODULE_DIR}/Graphics.h"
+"${SYSTEMS_MODULE_DIR}/Entity.cpp"
+"${SYSTEMS_MODULE_DIR}/Entity.h"
 )
 
 add_library(Systems ${SystemsSourceList})
@@ -237,7 +241,7 @@ set_target_properties(PhysicsDemo PROPERTIES
 	FOLDER "Executables"
 )
 target_link_libraries(PhysicsDemo
-	PRIVATE Platform Math Visual EnTT::EnTT
+	PRIVATE Platform Math Visual Systems
 )
 
 if ( MSVC )
