@@ -16,5 +16,6 @@ namespace jm::math
 	struct rigid_motion3
 	{
 		vector3<T> position{};
+		quaternion<T> rotation{};
 	};
 }

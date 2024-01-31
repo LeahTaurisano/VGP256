@@ -13,6 +13,8 @@
 
 #include "Systems/Components.h"
 
+#include "Worlds.h"
+
 namespace jm
 {
 	constexpr math::vector2<iSize> screenSize = { 1600, 900 };
@@ -79,9 +81,7 @@ namespace jm
 
 		void CreateWorld()
 		{
-			entity_id entity0 = registry.create();
-
-			registry.emplace<spatial3_component>(entity0, math::vector3_f32(0.f, 3.f, 3.f));
+			CreateBasicWorld(registry);
 		}
 
 		void DestroyWorld()
@@ -110,6 +110,22 @@ namespace jm
 			if (InputSystem.GetKeyboard().DPressed)
 			{
 				Camera.translate(cameraTranslateSpeed * Camera.get_right());
+			}
+			if (InputSystem.GetKeyboard().UpPressed)
+			{
+				Camera.rotate(0.0f, cameraRotateSpeed);
+			}
+			if (InputSystem.GetKeyboard().DownPressed)
+			{
+				Camera.rotate(0.0f, -cameraRotateSpeed);
+			}
+			if (InputSystem.GetKeyboard().LeftPressed)
+			{
+				Camera.rotate(-cameraRotateSpeed, 0.0f);
+			}
+			if (InputSystem.GetKeyboard().RightPressed)
+			{
+				Camera.rotate(cameraRotateSpeed, 0.0f);
 			}
 			InputSystem.Update();
 		}
