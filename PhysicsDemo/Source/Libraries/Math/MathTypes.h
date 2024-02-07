@@ -100,6 +100,12 @@ namespace jm::math
 		return radius * vector3<T>(sin(phi) * sin(theta), cos(phi), sin(phi) * cos(theta));
 	}
 
+	template <typename T>
+	matrix33<T> quat_to_mat(quaternion<T> const& quat)
+	{
+		return glm::mat3_cast(quat);
+	}
+
 	template <size_t D, typename T>
 	T angle(vectorN<D, T> const& a, vectorN<D, T> const& b)
 	{

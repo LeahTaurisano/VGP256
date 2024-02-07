@@ -7,6 +7,7 @@
 #include "Platform/WindowedApplication.h"
 
 #include "Systems/Entity.h"
+#include "Systems/Collision.h"
 #include "Systems/Graphics.h"
 
 #include "DearImGui/imgui.h"
@@ -61,6 +62,8 @@ namespace jm
 		{
 			Timer.Update();
 			InputUpdate();
+
+			Colliders = build_colliders(registry);
 
 			GraphicsSystem.Draw3D(Camera, ClearColour, []() {});
 
@@ -136,6 +139,7 @@ namespace jm
 
 		math::camera3<f32> Camera;
 		math::vector3_f32 ClearColour;
+		collider_set Colliders;
 
 		Tactual::System InputSystem;
 		System::Graphics GraphicsSystem;

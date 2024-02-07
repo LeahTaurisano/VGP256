@@ -20,6 +20,43 @@ namespace jm::math
 	};
 
 	template <typename T>
+	struct ray3
+	{
+		vector3<T> origin{};
+		vector3<T> direction{}; //assumes normalized
+	};
+
+	template <typename T>
+	bool intersects(sphere3<T> const& sphere, ray3<T> const& ray, T& t)
+	{
+		//t^2 + 2bt + c = 0
+		const vector3<T> offset = ray.origin - sphere.centre;
+		const T b = dot(offset, ray.direction);
+		const T c = dot(offset, offset) - sphere.radius * sphere.radius;
+
+		if (c > T(0) && b > T(0))
+		{
+			//ray origin outside the sphere AND ray pointing away from sphere (obtuse angle)
+			return false;
+		}
+
+		const T D = b * b - c;
+		if (D < T(0))
+		{
+			//negative determinant, misses sphere
+			return false;
+		}
+
+		t = -b - std::sqrt(D);
+		if (t < T(0))
+		{
+			t = T(0); //ray started inside sphere
+		}
+
+		return true;
+	}
+
+	template <typename T>
 	bool intersects(sphere3<T> const& a, sphere3<T> const& b)
 	{
 		const vector3<T> center_displacement = a.centre - b.centre;
