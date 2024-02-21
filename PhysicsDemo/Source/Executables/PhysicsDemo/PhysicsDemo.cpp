@@ -14,12 +14,79 @@
 
 #include "Systems/Components.h"
 
+#include "Systems/Simulation.h"
+
 #include "Worlds.h"
 
 namespace jm
 {
 	constexpr math::vector2<iSize> screenSize = { 1600, 900 };
 	constexpr math::vector2_f32 screenSizeFloat = { f32(screenSize.x), f32(screenSize.y) };
+
+	struct LoopController final
+	{
+		static constexpr uSize FixedTick_Frequency = 120; //Hz
+		static constexpr f64 FixedTick_Period = 1.0 / FixedTick_Frequency; //s
+
+		static constexpr uSize FPSUpdate_Frequency = 4; //Hz
+		static constexpr f64 FPSUpdate_Period = 1.0 / FPSUpdate_Frequency; //s
+
+		LoopController()
+		{
+			Timer.Initialize();
+		}
+
+		void Step()
+		{
+			Timer.Update();
+			FPSCounter++;
+
+			const f64 dt = Timer.GetElapsedTime();
+			FPSUpdateAccumulator += dt;
+			if (FPSUpdateAccumulator > FPSUpdate_Period)
+			{
+				FPSUpdateAccumulator -= FPSUpdate_Period;
+				FPS = FPSUpdate_Frequency * FPSCounter;
+				FPSCounter = 0;
+			}
+
+			SimUpdateAccumulator += dt;
+			if (SimUpdateAccumulator > FixedTick_Period)
+			{
+				SimUpdateAccumulator -= FixedTick_Period;
+				ShouldTick = true;
+			}
+			else
+			{
+				ShouldTick = false;
+			}
+
+		}
+
+		f32 GetLoopDeltaTime()
+		{
+			return static_cast<f32>(Timer.GetElapsedTime());
+		}
+
+		uSize GetFPS()
+		{
+			return FPS;
+		}
+
+		bool ShouldTickThisFrame()
+		{
+			return ShouldTick;
+		}
+
+	private:
+
+		Platform::Timer Timer;
+		f64 SimUpdateAccumulator = 0.0;
+		f64 FPSUpdateAccumulator = 0.0;
+		uSize FPSCounter = 0;
+		uSize FPS = 60;
+		bool ShouldTick = false;
+	};
 
 	math::camera3<f32> Make3DCamera(f32 distanceFromOrigin, f32 yFOV, f32 aspectRatio)
 	{
@@ -41,12 +108,10 @@ namespace jm
 		PhysicsDemo(const Platform::RuntimeContext& context)
 			: Platform::WindowedApplication(context, { "3D", { 50 , 50 }, { screenSize.x, screenSize.y } })
 			, Camera(Make3DCamera(10.0f, 45.0f, window->GetArea().GetAspectRatio()))
-			, ClearColour({ 0.2f, 0.3f, 0.3f })
 			, registry()
 			, InputSystem()
 			, GraphicsSystem(*window, registry)
 		{
-			Timer.Initialize();
 		}
 
 		virtual ~PhysicsDemo() override = default;
@@ -60,12 +125,54 @@ namespace jm
 
 		virtual void RunLoop() override
 		{
-			Timer.Update();
+			Controller.Step();
+
 			InputUpdate();
 
 			Colliders = build_colliders(registry);
 
-			GraphicsSystem.Draw3D(Camera, ClearColour, []() {});
+			if (Simulating && Controller.ShouldTickThisFrame())
+			{
+				SimulationUpdate();
+			}
+
+			uSize fps = Controller.GetFPS();
+			GraphicsSystem.Draw3D(Camera, [this, fps]()
+				{
+					ImGui::Begin("Data");
+					ImGui::Text("FPS = %d", fps);
+
+					ImGui::Text("Simulation");
+					if (ImGui::Button("Play"))
+					{
+						Simulating = true;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Pause"))
+					{
+						Simulating = false;
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Reset"))
+					{
+						DestroyWorld();
+						CreateWorld();
+					}
+
+					GraphicsSystem.ImGuiDebug();
+
+					ImGui::Text("Entities");
+					ImGui::Text("Count = %d", registry.storage<entity_id>().in_use());
+					/*if (SelectedEntity.has_value())
+					{
+						ImGui::Text("Selected = %d", get_entity_id_raw(SelectedEntity.value().Entity));
+					}
+					else
+					{
+						ImGui::Text("Selected = null");
+					}*/
+					ImGui::End();
+				});
 
 			Running = !InputSystem.GetKeyboard().EscPressed;
 		}
@@ -95,8 +202,8 @@ namespace jm
 		void InputUpdate()
 		{
 			const bool shiftPressed = InputSystem.GetKeyboard().ShiftPressed;
-			const float cameraTranslateSpeed = (shiftPressed ? 3.0f : 1.5f) * float(Timer.GetElapsedTime());
-			const float cameraRotateSpeed = float(Timer.GetElapsedTime());
+			const float cameraTranslateSpeed = (shiftPressed ? 3.0f : 1.5f) * float(Controller.GetLoopDeltaTime());
+			const float cameraRotateSpeed = float(Controller.GetLoopDeltaTime());
 
 			if (InputSystem.GetKeyboard().WPressed)
 			{
@@ -133,12 +240,16 @@ namespace jm
 			InputSystem.Update();
 		}
 
-		Platform::Timer Timer;
+		void SimulationUpdate()
+		{
+			integrate(registry, static_cast<f32>(LoopController::FixedTick_Period));
+		}
 
 		entity_registry registry;
+		LoopController Controller;
+		bool Simulating = false;
 
 		math::camera3<f32> Camera;
-		math::vector3_f32 ClearColour;
 		collider_set Colliders;
 
 		Tactual::System InputSystem;

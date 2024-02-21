@@ -20,7 +20,7 @@ namespace jm
 				boxes.push_back({ entity,
 					math::box3{spatial.position,
 					math::vector3_f32{1.0f},
-					math::quat_to_mat(spatial.rotation)} });
+					math::quat_to_mat(spatial.orientation)} });
 				break;
 			}
 		}

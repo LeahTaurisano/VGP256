@@ -27,13 +27,18 @@ namespace jm::System
 		GLsizei cubeVertices;
 		GLsizei sphereVertices;
 		GLsizei axesVertices;
+		math::vector3_f32 ClearColour;
+
+		bool Debug3D = true;
+		bool Debug2D = false;
 
 	public:
 		Graphics(Platform::Window& window, entity_registry& registry);
 		~Graphics();
 
 		Platform::MessageHandler* GetMessageHandler();
+		void ImGuiDebug();
 
-		void Draw3D(math::camera3<f32> const& camera, math::vector3_f32 const& clearColour, std::function<void()>&& imguiFrame);
+		void Draw3D(math::camera3<f32> const& camera, std::function<void()>&& imguiFrame);
 	};
 }

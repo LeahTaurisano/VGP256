@@ -11,6 +11,7 @@ namespace jm
 		entity_id e = registry.create();
 		registry.emplace<spatial3_component>(e, position, rotation);
 		registry.emplace<shape_component>(e, shape_component::sphere);
+		registry.emplace<linear_body3_component>(e, math::zero3, 2.f);
 	}
 
 	void AddBoxEntity(entity_registry& registry, math::vector3_f32 const& position, math::quaternion_f32 const& rotation, math::vector3_f32 const& extents = math::zero3)
@@ -19,6 +20,7 @@ namespace jm
 		entity_id e = registry.create();
 		registry.emplace<spatial3_component>(e, position, rotation);
 		registry.emplace<shape_component>(e, shape_component::box);
+		registry.emplace<linear_body3_component>(e, math::zero3, 2.f);
 	}
 
 	void CreateBasicWorld(entity_registry& registry)
