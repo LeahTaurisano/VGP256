@@ -6,13 +6,13 @@
 
 namespace jm
 {
-	struct SphereCollider
+	struct sphere_collider
 	{
 		entity_id entity;
 		math::sphere3<f32> sphere;
 	};
 
-	struct BoxCollider
+	struct box_collider
 	{
 		entity_id entity;
 		math::box3<f32> box;
@@ -20,8 +20,8 @@ namespace jm
 
 	struct collider_set
 	{
-		std::vector<SphereCollider> spheres;
-		std::vector<BoxCollider> boxes;
+		std::vector<sphere_collider> spheres{};
+		std::vector<box_collider> boxes{};
 	};
 
 	struct entity_offset

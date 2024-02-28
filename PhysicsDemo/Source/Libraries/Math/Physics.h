@@ -90,4 +90,26 @@ namespace jm::math
 	{
 		value += (delta_t * (last_derivative + derivative) * 0.5f);
 	}
+
+	template <typename T>
+	quaternion<T> get_spin(quaternion<T> const& orientation, vector3<T> const& angular_velocity)
+	{
+		quaternion<T> omega{ T(0), angular_velocity };
+		return T(0.5) * orientation * omega;
+	}
+
+	template <typename T>
+	vector3<T> get_sphere_inertia(T mass, T radius)
+	{
+		constexpr T two_fifths = T(2) / T(5);
+		return vector3<T>{two_fifths* mass* radius* radius};
+	}
+
+	template <typename T>
+	vector3<T> get_box_inertia(T mass, const vector3<T>& extents)
+	{
+		constexpr T one_twelfth = T(1) / T(12);
+		const vector3<T> extents_sqr = extents * extents;
+		return one_twelfth * mass * vector3<T>{extents_sqr.y + extents_sqr.z, extents_sqr.x + extents_sqr.z, extents_sqr.x + extents_sqr.y};
+	}
 }

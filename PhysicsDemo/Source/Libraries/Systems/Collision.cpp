@@ -6,25 +6,24 @@ namespace jm
 {
 	collider_set build_colliders(entity_registry& registry)
 	{
-		auto shape_entity_view = registry.view<const shape_component, const spatial3_component>();
-
-		std::vector<SphereCollider> spheres;
-		std::vector<BoxCollider> boxes;
-		for (auto&& [entity, shape, spatial] : shape_entity_view.each())
+		std::vector<sphere_collider> spheres;
+		std::vector<box_collider> boxes;
 		{
-			switch (shape)
+			auto sphere_entity_view = registry.view<const sphere_shape_component, const collidable_component, const spatial3_component>();
+			spheres.reserve(sphere_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : sphere_entity_view.each())
 			{
-			case shape_component::sphere:
-				spheres.push_back({ entity, math::sphere3{ spatial.position, 1.0f } }); //assume unit radius spheres
-			default:
-				boxes.push_back({ entity,
-					math::box3{spatial.position,
-					math::vector3_f32{1.0f},
-					math::quat_to_mat(spatial.orientation)} });
-				break;
+				spheres.push_back({ entity, math::sphere3<f32>{spatial.position, shape.radius} });
 			}
 		}
-
+		{
+			auto box_entity_view = registry.view<const box_shape_component, const collidable_component, const spatial3_component>();
+			boxes.reserve(box_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : box_entity_view.each())
+			{
+				boxes.push_back({ entity, math::box3<f32>{spatial.position, shape.extents, math::quat_to_mat(spatial.orientation)} });
+			}
+		}
 		return { spheres, boxes };
 	}
 
@@ -33,7 +32,7 @@ namespace jm
 		f32 t_min = std::numeric_limits<f32>::infinity();
 		entity_id entity_closest = null_entity_id;
 		math::vector3_f32 offset{};
-		for (SphereCollider const& collider : colliders.spheres)
+		for (sphere_collider const& collider : colliders.spheres)
 		{
 			f32 t_intersect = std::numeric_limits<f32>::infinity();
 			if (math::intersects(collider.sphere, ray, t_intersect) &&
@@ -44,7 +43,7 @@ namespace jm
 				offset = (ray.origin + t_intersect * ray.direction) - collider.sphere.centre;
 			}
 		}
-		/*for (BoxCollider const& box : colliders.boxes)
+		/*for (box_collider const& box : colliders.boxes)
 		{
 			
 		}*/

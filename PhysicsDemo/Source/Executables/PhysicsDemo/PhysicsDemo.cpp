@@ -110,7 +110,7 @@ namespace jm
 			, Camera(Make3DCamera(10.0f, 45.0f, window->GetArea().GetAspectRatio()))
 			, registry()
 			, InputSystem()
-			, GraphicsSystem(*window, registry)
+			, GraphicsSystem(*window, registry, { 0.2f, 0.2f, 0.2f })
 		{
 		}
 
@@ -137,7 +137,7 @@ namespace jm
 			}
 
 			uSize fps = Controller.GetFPS();
-			GraphicsSystem.Draw3D(Camera, [this, fps]()
+			GraphicsSystem.Draw(Camera, [this, fps]()
 				{
 					ImGui::Begin("Data");
 					ImGui::Text("FPS = %d", fps);

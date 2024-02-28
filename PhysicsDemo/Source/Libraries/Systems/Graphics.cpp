@@ -1,73 +1,140 @@
 #include "Graphics.h"
-
 #include "Components.h"
-#include "Platform/WindowedApplication.h"
+
+#include "DearImGui/imgui.h"
 #include "Visual/DearImGui/ImGuiContext.h"
 #include "Visual/VisualGeometry.h"
-#include "imgui.h"
+
+#include "Platform/WindowedApplication.h"
 
 namespace jm::System
 {
-	Graphics::Graphics(Platform::Window& window, entity_registry& registry)
+	Graphics::Data2D::Data2D(cstring vertexSource, cstring fragmentSource)
+		: Program(vertexSource, fragmentSource)
+	{
+	}
+
+	Graphics::Data3D::Data3D(cstring vertexSource, cstring fragmentSource)
+		: Program(vertexSource, fragmentSource)
+	{
+	}
+
+	Graphics::Graphics(Platform::Window& window, entity_registry& registry, math::vector3_f32 const& clearColour)
 		: Renderer(window)
 		, EntityRegistry(registry)
-		, Program(R"(
+		, TwoDimensional(R"(
 			#version 330 core
-			layout (location = 0) in vec3 inPosition;
+			layout (location = 0) in vec2 inPosition;
 			layout (location = 1) in vec3 inColour;
-			
+			  
 			out vec3 outColour;
-
-			uniform mat4 model;
+			
 			uniform mat4 projectionView;
-
+			uniform mat4 model;
+			
 			void main()
 			{
-				gl_Position = projectionView  * model * vec4(inPosition, 1.0f);
+			    gl_Position = projectionView * model * vec4(inPosition, 0.01, 1.0);
 				outColour = inColour;
 			}
 			)", R"(
 			#version 330 core
-			in vec3 outColour;
 			
 			out vec4 FragColor;
-
+			
+			in vec3 outColour;
+			
 			void main()
 			{
-				FragColor = vec4(outColour, 1.0f);
+			    FragColor = vec4(outColour, 1.0f);
 			}
 			)")
-		, ClearColour({ 0.2f, 0.3f, 0.3f })
+		, ThreeDimensional(R"(
+			#version 330 core
+			layout (location = 0) in vec3 inPosition;
+			layout (location = 1) in vec3 inColour;
+			  
+			out vec3 outColour;
+			
+			uniform mat4 projectionView;
+			uniform mat4 model;
+			
+			void main()
+			{
+			    gl_Position = projectionView * model * vec4(inPosition, 1.0);
+				outColour = inColour;
+			}
+			)", R"(
+			#version 330 core
+			
+			out vec4 FragColor;
+			
+			in vec3 outColour;
+			
+			void main()
+			{
+			    FragColor = vec4(outColour, 1.0f);
+			}
+			)")
+		, ClearColour(clearColour)
 	{
-		Visual::InputLayout layout{ {3, 3} };
+		{
+			Visual::InputLayout layout{ {2, 3 } };
 
-		byte_list inputVertexData;
-		{
-			auto cubeVertexData = Visual::GenerateCube(layout);
-			inputVertexData.insert(inputVertexData.end(), cubeVertexData.data.begin(), cubeVertexData.data.end());
-			cubeVertices = static_cast<GLsizei>(cubeVertexData.size);
-		}
-		{
-			auto SphereVertexData = Visual::GenerateSphere(layout);
-			inputVertexData.insert(inputVertexData.end(), SphereVertexData.data.begin(), SphereVertexData.data.end());
-			sphereVertices = static_cast<GLsizei>(SphereVertexData.size);
-		}
-		{
-			auto axesData = Visual::GenerateCoordinateAxes3(layout);
-			inputVertexData.insert(inputVertexData.end(), axesData.data.begin(), axesData.data.end());
-			axesVertices = static_cast<GLsizei>(axesData.size);
-		}
+			byte_list inputVertexData;
+			{
+				auto boxVertexData = Visual::GenerateBox(layout);
+				inputVertexData.insert(inputVertexData.end(), boxVertexData.data.begin(), boxVertexData.data.end());
+				TwoDimensional.squareVertices = (GLsizei)boxVertexData.size;
+			}
+			{
+				auto diskVertexData = Visual::GenerateDisk(layout);
+				inputVertexData.insert(inputVertexData.end(), diskVertexData.data.begin(), diskVertexData.data.end());
+				TwoDimensional.diskVertices = (GLsizei)diskVertexData.size;
+			}
+			{
+				auto axesVertexData = Visual::GenerateCoordinateAxes2(layout);
+				inputVertexData.insert(inputVertexData.end(), axesVertexData.data.begin(), axesVertexData.data.end());
+				TwoDimensional.axesVertices = (GLsizei)axesVertexData.size;
+			}
 
-		inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
-		inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(inputLayoutHandle, inputVertexData);
+			TwoDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
+			TwoDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.inputLayoutHandle, inputVertexData);
+		}
+		{
+			Visual::InputLayout layout{ { 3, 3 } };
+
+			byte_list inputVertexData;
+			{
+				auto cubeVertexData = Visual::GenerateCube(layout);
+				inputVertexData.insert(inputVertexData.end(), cubeVertexData.data.begin(), cubeVertexData.data.end());
+				ThreeDimensional.cubeVertices = (GLsizei)cubeVertexData.size;
+			}
+			{
+				auto sphereVertexData = Visual::GenerateSphere(layout);
+				inputVertexData.insert(inputVertexData.end(), sphereVertexData.data.begin(), sphereVertexData.data.end());
+				ThreeDimensional.sphereVertices = (GLsizei)sphereVertexData.size;
+			}
+			{
+				auto axesVertexData = Visual::GenerateCoordinateAxes3(layout);
+				inputVertexData.insert(inputVertexData.end(), axesVertexData.data.begin(), axesVertexData.data.end());
+				ThreeDimensional.axesVertices = (GLsizei)axesVertexData.size;
+			}
+
+			ThreeDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
+			ThreeDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(ThreeDimensional.inputLayoutHandle, inputVertexData);
+		}
 
 		glEnable(GL_DEPTH_TEST);
 	}
 
 	Graphics::~Graphics()
 	{
-		Renderer.RasterizerMemory->destroyInputBuffer(inputLayoutHandle, inputBufferHandle);
-		Renderer.RasterizerMemory->destroyInputLayout(inputLayoutHandle);
+		Renderer.RasterizerMemory->destroyInputBuffer(TwoDimensional.inputLayoutHandle, TwoDimensional.inputBufferHandle);
+		Renderer.RasterizerMemory->destroyInputLayout(TwoDimensional.inputLayoutHandle);
+
+		Renderer.RasterizerMemory->destroyInputBuffer(ThreeDimensional.inputLayoutHandle, ThreeDimensional.inputBufferHandle);
+		Renderer.RasterizerMemory->destroyInputLayout(ThreeDimensional.inputLayoutHandle);
 	}
 
 	Platform::MessageHandler* Graphics::GetMessageHandler()
@@ -75,50 +142,114 @@ namespace jm::System
 		return Renderer.ImGuiContextPtr->GetMessageHandler();
 	}
 
-	void Graphics::Draw3D(math::camera3<f32> const& camera, std::function<void()> && imguiFrame)
+	template <typename T>
+	auto&& get_shapes2(entity_registry& registry)
 	{
-		auto spatial_shape_view = EntityRegistry.view<const spatial3_component, const shape_component>();
+		auto shape_entity_view = registry.view<const T, const spatial2_component>();
+		return shape_entity_view.each();
+	}
 
-		std::vector<math::matrix44_f32> CubeInstances;
-		std::vector<math::matrix44_f32> SphereInstances;
-		for (auto&& [entity, spatial, shape] : spatial_shape_view.each())
+	template <typename T>
+	auto&& get_shapes3(entity_registry& registry)
+	{
+		auto shape_entity_view = registry.view<const T, const spatial3_component>();
+		return shape_entity_view.each();
+	}
+
+	void Graphics::Draw(math::camera3<f32> const& camera, std::function<void()>&& imguiFrame)
+	{
+		std::vector<math::matrix33_f32> diskInstances;
+		std::vector<math::matrix33_f32> squareInstances;
+		std::vector<math::matrix44_f32> sphereInstances;
+		std::vector<math::matrix44_f32> cubeInstances;
 		{
-			switch (shape)
+			auto disk_entity_view = EntityRegistry.view<const disk_shape_component, const spatial2_component>();
+			diskInstances.reserve(disk_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : disk_entity_view.each())
 			{
-			case shape_component::sphere:
-				SphereInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation));
-				break;
-			default:
-				CubeInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation));
-				break;
+				diskInstances.push_back(math::isometry_matrix2(spatial.position, spatial.orientation) * math::scale_matrix2(shape.radius));
 			}
-			
+		}
+		{
+			auto rectangle_entity_view = EntityRegistry.view<const rectangle_shape_component, const spatial2_component>();
+			squareInstances.reserve(rectangle_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : rectangle_entity_view.each())
+			{
+				squareInstances.push_back(math::isometry_matrix2(spatial.position, spatial.orientation) * math::scale_matrix2(shape.extents));
+			}
+		}
+		{
+			auto sphere_entity_view = EntityRegistry.view<const sphere_shape_component, const spatial3_component>();
+			sphereInstances.reserve(sphere_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : sphere_entity_view.each())
+			{
+				sphereInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation) * math::scale_matrix3(shape.radius));
+			}
+		}
+		{
+			auto box_entity_view = EntityRegistry.view<const box_shape_component, const spatial3_component>();
+			cubeInstances.reserve(box_entity_view.size_hint());
+			for (auto&& [entity, shape, spatial] : box_entity_view.each())
+			{
+				cubeInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation) * math::scale_matrix3(shape.extents));
+			}
 		}
 
 		Renderer.RasterizerImpl->PrepareRenderBuffer(ClearColour);
 
-		Program.SetUniform("projectionView", camera.get_perspective_transform() * camera.get_view_transform());
 		{
+			ThreeDimensional.Program.SetUniform("projectionView", camera.get_perspective_transform() * camera.get_view_transform());
+
+			glBindVertexArray(static_cast<GLuint>(ThreeDimensional.inputLayoutHandle));
 			GLsizei start = 0;
-			glBindVertexArray(static_cast<GLuint>(inputLayoutHandle));
 
-			for (math::matrix44_f32& instance : CubeInstances)
+			for (auto& instance : cubeInstances)
 			{
-				Program.SetUniform("model", instance);
-				glDrawArrays(GL_TRIANGLES, start, cubeVertices);
+				ThreeDimensional.Program.SetUniform("model", instance);
+				glDrawArrays(GL_TRIANGLES, start, ThreeDimensional.cubeVertices);
 			}
-			start += cubeVertices;
+			start += ThreeDimensional.cubeVertices;
 
-			for (math::matrix44_f32& instance : SphereInstances)
+			for (auto& instance : sphereInstances)
 			{
-				Program.SetUniform("model", instance);
-				glDrawArrays(GL_TRIANGLES, start, sphereVertices);
+				ThreeDimensional.Program.SetUniform("model", instance);
+				glDrawArrays(GL_TRIANGLES, start, ThreeDimensional.sphereVertices);
 			}
-			start += sphereVertices;
+			start += ThreeDimensional.sphereVertices;
 
-			Program.SetUniform("model", math::identity4);
-			glDrawArrays(GL_LINES, start, axesVertices);
+			if (Debug3D)
+			{
+				ThreeDimensional.Program.SetUniform("model", math::identity4);
+				glDrawArrays(GL_LINES, start, ThreeDimensional.axesVertices);
+			}
 		}
+
+		{
+			TwoDimensional.Program.SetUniform("projectionView", camera.get_orthogonal_transform() * camera.get_view_transform());
+
+			glBindVertexArray(static_cast<GLuint>(TwoDimensional.inputLayoutHandle));
+			GLsizei start = 0;
+
+			for (auto& instance : squareInstances)
+			{
+				TwoDimensional.Program.SetUniform("model", instance);
+				glDrawArrays(GL_TRIANGLES, start, TwoDimensional.squareVertices);
+			}
+			start += TwoDimensional.squareVertices;
+			for (auto& instance : diskInstances)
+			{
+				TwoDimensional.Program.SetUniform("model", instance);
+				glDrawArrays(GL_TRIANGLES, start, TwoDimensional.diskVertices);
+			}
+			start += TwoDimensional.diskVertices;
+
+			if (Debug2D)
+			{
+				TwoDimensional.Program.SetUniform("model", math::identity4);
+				glDrawArrays(GL_LINES, start, TwoDimensional.axesVertices);
+			}
+		}
+		glEnable(GL_DEPTH_TEST);
 
 		Renderer.ImGuiContextPtr->RunFrame(std::move(imguiFrame));
 
