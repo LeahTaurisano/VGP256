@@ -6,7 +6,7 @@
 namespace jm
 {
 	constexpr f32 Damping = 0.9995f;
-	constexpr math::vector3<f32> Gravity = { 0.f, /*-9.81f*/0.f, 0.f };
+	constexpr math::vector3<f32> Gravity = { 0.f, -9.81f, 0.f };
 	constexpr math::vector2<f32> Gravity2 = { Gravity.x, Gravity.y };
 
 	void integrate(entity_registry& registry, f32 delta_time)

@@ -3,6 +3,8 @@
 #include "Visual/RenderingContext.h"
 #include "Visual/Visual.h"
 
+#include "DearImGui/imgui.h"
+
 #include "Math/Camera.h"
 
 #include "Entity.h"

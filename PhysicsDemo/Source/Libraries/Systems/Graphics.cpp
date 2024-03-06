@@ -1,7 +1,6 @@
 #include "Graphics.h"
 #include "Components.h"
 
-#include "DearImGui/imgui.h"
 #include "Visual/DearImGui/ImGuiContext.h"
 #include "Visual/VisualGeometry.h"
 
@@ -19,25 +18,7 @@ namespace jm::System
 	{
 	}
 
-	Graphics::Graphics(Platform::Window& window, entity_registry& registry, math::vector3_f32 const& clearColour)
-		: Renderer(window)
-		, EntityRegistry(registry)
-		, TwoDimensional(R"(
-			#version 330 core
-			layout (location = 0) in vec2 inPosition;
-			layout (location = 1) in vec3 inColour;
-			  
-			out vec3 outColour;
-			
-			uniform mat4 projectionView;
-			uniform mat4 model;
-			
-			void main()
-			{
-			    gl_Position = projectionView * model * vec4(inPosition, 0.01, 1.0);
-				outColour = inColour;
-			}
-			)", R"(
+	cstring pixelShader = R"(
 			#version 330 core
 			
 			out vec4 FragColor;
@@ -48,7 +29,28 @@ namespace jm::System
 			{
 			    FragColor = vec4(outColour, 1.0f);
 			}
-			)")
+			)";
+
+	Graphics::Graphics(Platform::Window& window, entity_registry& registry, math::vector3_f32 const& clearColour)
+		: Renderer(window)
+		, EntityRegistry(registry)
+		, TwoDimensional(R"(
+			#version 330 core
+			layout (location = 0) in vec2 inPosition;
+			layout (location = 1) in vec3 inColour;
+			  
+			out vec3 outColour;
+			
+			uniform mat3 view;
+			uniform mat3 model;
+			
+			void main()
+			{
+				vec3 worldPosition = view * model * vec3(inPosition, -1.0);
+			    gl_Position = vec4(worldPosition, 1.0);
+				outColour = inColour;
+			}
+			)", pixelShader)
 		, ThreeDimensional(R"(
 			#version 330 core
 			layout (location = 0) in vec3 inPosition;
@@ -64,18 +66,7 @@ namespace jm::System
 			    gl_Position = projectionView * model * vec4(inPosition, 1.0);
 				outColour = inColour;
 			}
-			)", R"(
-			#version 330 core
-			
-			out vec4 FragColor;
-			
-			in vec3 outColour;
-			
-			void main()
-			{
-			    FragColor = vec4(outColour, 1.0f);
-			}
-			)")
+			)", pixelShader)
 		, ClearColour(clearColour)
 	{
 		{
@@ -98,6 +89,7 @@ namespace jm::System
 				TwoDimensional.axesVertices = (GLsizei)axesVertexData.size;
 			}
 
+			TwoDimensional.Program.MakeActive();
 			TwoDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			TwoDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.inputLayoutHandle, inputVertexData);
 		}
@@ -121,6 +113,7 @@ namespace jm::System
 				ThreeDimensional.axesVertices = (GLsizei)axesVertexData.size;
 			}
 
+			ThreeDimensional.Program.MakeActive();
 			ThreeDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			ThreeDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(ThreeDimensional.inputLayoutHandle, inputVertexData);
 		}
@@ -198,11 +191,12 @@ namespace jm::System
 		Renderer.RasterizerImpl->PrepareRenderBuffer(ClearColour);
 
 		{
-			ThreeDimensional.Program.SetUniform("projectionView", camera.get_perspective_transform() * camera.get_view_transform());
+			ThreeDimensional.Program.MakeActive();
 
 			glBindVertexArray(static_cast<GLuint>(ThreeDimensional.inputLayoutHandle));
-			GLsizei start = 0;
+			ThreeDimensional.Program.SetUniform("projectionView", camera.get_perspective_transform() * camera.get_view_transform());
 
+			GLsizei start = 0;
 			for (auto& instance : cubeInstances)
 			{
 				ThreeDimensional.Program.SetUniform("model", instance);
@@ -224,17 +218,20 @@ namespace jm::System
 			}
 		}
 
+
 		{
-			TwoDimensional.Program.SetUniform("projectionView", camera.get_orthogonal_transform() * camera.get_view_transform());
 
+			TwoDimensional.Program.MakeActive();
 			glBindVertexArray(static_cast<GLuint>(TwoDimensional.inputLayoutHandle));
-			GLsizei start = 0;
+			TwoDimensional.Program.SetUniform("view", math::scale_matrix2(0.1f) * math::matrix33_f32(camera.get_orthogonal_transform()));
 
+			GLsizei start = 0;
 			for (auto& instance : squareInstances)
 			{
 				TwoDimensional.Program.SetUniform("model", instance);
 				glDrawArrays(GL_TRIANGLES, start, TwoDimensional.squareVertices);
 			}
+			OpenGL::CheckError();
 			start += TwoDimensional.squareVertices;
 			for (auto& instance : diskInstances)
 			{
@@ -245,11 +242,10 @@ namespace jm::System
 
 			if (Debug2D)
 			{
-				TwoDimensional.Program.SetUniform("model", math::identity4);
+				TwoDimensional.Program.SetUniform("model", math::identity3);
 				glDrawArrays(GL_LINES, start, TwoDimensional.axesVertices);
 			}
 		}
-		glEnable(GL_DEPTH_TEST);
 
 		Renderer.ImGuiContextPtr->RunFrame(std::move(imguiFrame));
 
