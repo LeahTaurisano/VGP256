@@ -92,6 +92,8 @@ namespace jm::System
 			TwoDimensional.Program.MakeActive();
 			TwoDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			TwoDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.inputLayoutHandle, inputVertexData);
+
+			TwoDimensional.linesLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 		}
 		{
 			Visual::InputLayout layout{ { 3, 3 } };
@@ -188,6 +190,12 @@ namespace jm::System
 			}
 		}
 
+
+		std::vector<math::vector2_f32> lines;
+		lines.push_back(math::vector2_f32{ 0.f });
+		lines.push_back(math::vector2_f32{ 1.f });
+
+
 		Renderer.RasterizerImpl->PrepareRenderBuffer(ClearColour);
 
 		{
@@ -240,11 +248,18 @@ namespace jm::System
 			}
 			start += TwoDimensional.diskVertices;
 
+
 			if (Debug2D)
 			{
 				TwoDimensional.Program.SetUniform("model", math::identity3);
 				glDrawArrays(GL_LINES, start, TwoDimensional.axesVertices);
 			}
+			//draw lines in wolrd space
+			Visual::InputLayout layout{ {2, 3 } };
+			auto linesVertexData = Visual::GenerateLines(layout, lines);
+			TwoDimensional.linesBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.linesLayoutHandle, linesVertexData.data);
+			TwoDimensional.Program.SetUniform("model", math::identity3);
+			glDrawArrays(GL_LINES, 0, (GLsizei)linesVertexData.size);
 		}
 
 		Renderer.ImGuiContextPtr->RunFrame(std::move(imguiFrame));
