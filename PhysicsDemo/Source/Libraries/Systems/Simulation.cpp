@@ -55,5 +55,12 @@ namespace jm
 				spatial.orientation = normalize(spatial.orientation);
 			}
 		}
+		{
+			auto constraints = registry.view<constraint_component, spatial3_component>();
+			for (auto&& [entity, constraint, spatial] : constraints.each())
+			{
+				
+			}
+		}
 	}
 }

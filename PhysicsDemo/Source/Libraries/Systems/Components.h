@@ -32,6 +32,12 @@ namespace jm
 	{
 	};
 
+	struct constraint_component
+	{
+		entity_id massA;
+		entity_id massB;
+	};
+
 	using linear_body2_component = math::linear_body2<f32>;
 	using linear_body3_component = math::linear_body3<f32>;
 
