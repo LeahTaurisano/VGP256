@@ -64,10 +64,26 @@ namespace jm
 		return CreateBoxEntity(registry, position, orientation, math::vector3_f32{1.f});
 	}
 
+	entity_id CreateConstraintEntity(entity_registry& registry
+		, f32 linkDistance
+		, entity_id massA
+		, entity_id massB)
+	{
+		auto entity = registry.create();
+		registry.emplace<constraint_component_rigid>(entity, linkDistance, massA, massB);
+		return entity;
+	}
+
 	void CreateBasicWorld(entity_registry& registry)
 	{
-		CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>());
-		CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>());
+		//entity_id massA = CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>());
+		//entity_id massB = CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>());
+		entity_id massA = CreateSphereEntity(registry, math::vector3_f32{0, 0, 3}, math::random::unit_quaternion<f32>());
+		entity_id massB = CreateSphereEntity(registry, math::vector3_f32{ 0, 0, -3 }, math::random::unit_quaternion<f32>());
+		//entity_id massC = CreateSphereEntity(registry, math::vector3_f32{ 0, 3, 0 }, math::random::unit_quaternion<f32>());
+		CreateConstraintEntity(registry, 4.f, massA, massB);
+		//CreateConstraintEntity(registry, 2.f, massB, massC);
+		//CreateConstraintEntity(registry, 2.f, massC, massA);
 	}
 }
 

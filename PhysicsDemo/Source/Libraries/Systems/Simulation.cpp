@@ -56,10 +56,40 @@ namespace jm
 			}
 		}
 		{
-			auto constraints = registry.view<constraint_component, spatial3_component>();
-			for (auto&& [entity, constraint, spatial] : constraints.each())
+			auto constraints = registry.view<constraint_component>();
+			for (auto&& [entity, constraint] : constraints.each())
 			{
-				
+				spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
+				spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
+				for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
+				{
+					const math::vector3_f32 dist = massAPos.position - massBPos.position;
+					const math::vector3_f32 dir = normalize(dist);
+					f32 d = length(dist);
+
+					f32 difference = std::abs(constraint.linkDistance - d) * 0.95f;
+
+					math::vector3_f32 translate = dir * 0.5f * difference;
+
+					massAPos.position -= translate;
+					massBPos.position += translate;
+				}
+			}
+
+			auto constraints_rigid = registry.view<constraint_component_rigid>();
+			for (auto&& [entity, constraint] : constraints_rigid.each())
+			{
+				spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
+				spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
+				for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
+				{
+					const math::vector3_f32 dist = massAPos.position - massBPos.position;
+					const math::vector3_f32 midpoint = (massAPos.position + massBPos.position) / 2.0f;
+					const math::vector3_f32 dir = normalize(dist);
+
+					massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
+					massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
+				}
 			}
 		}
 	}

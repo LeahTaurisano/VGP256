@@ -34,6 +34,16 @@ namespace jm
 
 	struct constraint_component
 	{
+		f32 linkDistance;
+
+		entity_id massA;
+		entity_id massB;
+	};
+
+	struct constraint_component_rigid
+	{
+		f32 linkDistance;
+
 		entity_id massA;
 		entity_id massB;
 	};
