@@ -22,13 +22,16 @@ namespace jm
 			}
 		}
 		{
-			auto lin_sim_view = registry.view<spatial3_component, linear_body3_component>();
-			for (auto&& [entity, spatial, linear] : lin_sim_view.each())
+			auto lin_sim_view = registry.view<spatial3_component, linear_body3_component, pinned_component>();
+			for (auto&& [entity, spatial, linear, pinned] : lin_sim_view.each())
 			{
-				math::vector3_f32 acceleration = Gravity + linear.applied_force * linear.inverse_mass;
-				math::euler_integration(linear.velocity, acceleration, delta_time);
-				linear.velocity *= Damping;
-				math::euler_integration(spatial.position, linear.velocity, delta_time);
+				if (!pinned.isPinned)
+				{
+					math::vector3_f32 acceleration = Gravity + linear.applied_force * linear.inverse_mass;
+					math::euler_integration(linear.velocity, acceleration, delta_time);
+					linear.velocity *= Damping;
+					math::euler_integration(spatial.position, linear.velocity, delta_time);
+				}
 			}
 		}
 		{
@@ -42,17 +45,20 @@ namespace jm
 			}
 		}
 		{
-			auto ang_sim_view = registry.view<spatial3_component, rotational_body3_component>();
-			for (auto&& [entity, spatial, angular] : ang_sim_view.each())
+			auto ang_sim_view = registry.view<spatial3_component, rotational_body3_component, pinned_component>();
+			for (auto&& [entity, spatial, angular, pinned] : ang_sim_view.each())
 			{
-				const math::matrix33_f32 rotationMatrix = math::rotation_matrix3(spatial.orientation);
-				const math::matrix33_f32 inverse_inertia_world = rotationMatrix * math::diagonal_matrix3(angular.inverse_inertia) * transpose(rotationMatrix);
-				const math::vector3_f32 acceleration = inverse_inertia_world * angular.applied_torque;
-				math::euler_integration(angular.velocity, acceleration, delta_time);
-				angular.velocity *= Damping;
-				const math::quaternion_f32 spin = math::get_spin(spatial.orientation, angular.velocity);
-				math::euler_integration(spatial.orientation, spin, delta_time);
-				spatial.orientation = normalize(spatial.orientation);
+				if (!pinned.isPinned)
+				{
+					const math::matrix33_f32 rotationMatrix = math::rotation_matrix3(spatial.orientation);
+					const math::matrix33_f32 inverse_inertia_world = rotationMatrix * math::diagonal_matrix3(angular.inverse_inertia) * transpose(rotationMatrix);
+					const math::vector3_f32 acceleration = inverse_inertia_world * angular.applied_torque;
+					math::euler_integration(angular.velocity, acceleration, delta_time);
+					angular.velocity *= Damping;
+					const math::quaternion_f32 spin = math::get_spin(spatial.orientation, angular.velocity);
+					math::euler_integration(spatial.orientation, spin, delta_time);
+					spatial.orientation = normalize(spatial.orientation);
+				}
 			}
 		}
 		{
@@ -81,14 +87,22 @@ namespace jm
 			{
 				spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
 				spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
+				pinned_component& massAPin = registry.get<pinned_component>(constraint.massA);
+				pinned_component& massBPin = registry.get<pinned_component>(constraint.massB);
 				for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
 				{
 					const math::vector3_f32 dist = massAPos.position - massBPos.position;
 					const math::vector3_f32 midpoint = (massAPos.position + massBPos.position) / 2.0f;
 					const math::vector3_f32 dir = normalize(dist);
 
-					massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
-					massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
+					if (!massBPin.isPinned)
+					{
+						massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
+					}
+					if (!massAPin.isPinned)
+					{
+						massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
+					}
 				}
 			}
 		}

@@ -48,6 +48,11 @@ namespace jm
 		entity_id massB;
 	};
 
+	struct pinned_component
+	{
+		bool isPinned;
+	};
+
 	using linear_body2_component = math::linear_body2<f32>;
 	using linear_body3_component = math::linear_body3<f32>;
 
