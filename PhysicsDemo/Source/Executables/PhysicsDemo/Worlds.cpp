@@ -94,7 +94,7 @@ namespace jm
 
 				if (y != 0)
 				{
-					CreateConstraintEntity(registry, 2.f, mass, spheres[spheres.size() - 7]);
+					CreateConstraintEntity(registry, 2.f, mass, spheres[spheres.size() - 4]);
 				}
 				spheres.push_back(mass);
 			}
