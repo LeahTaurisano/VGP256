@@ -95,13 +95,18 @@ namespace jm
 					const math::vector3_f32 midpoint = (massAPos.position + massBPos.position) / 2.0f;
 					const math::vector3_f32 dir = normalize(dist);
 
-					if (!massBPin.isPinned)
+					if (!massBPin.isPinned && !massAPin.isPinned)
 					{
 						massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
+						massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
 					}
-					if (!massAPin.isPinned)
+					else if (massBPin.isPinned)
 					{
 						massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
+					}
+					else if (massAPin.isPinned)
+					{
+						massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
 					}
 				}
 			}

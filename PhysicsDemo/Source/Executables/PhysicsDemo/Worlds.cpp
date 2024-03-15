@@ -80,31 +80,67 @@ namespace jm
 	void CreateBasicWorld(entity_registry& registry)
 	{
 		std::vector<entity_id> spheres;
-		for (int x = 0; x < 10; x += 2)
+		for (int y = 0; y < 10; y += 2)
 		{
-			for (int y = 0; y < 10; y += 2)
+			for (int x = 0; x < 10; x += 2)
 			{
 				bool pin = y == 8;
 				entity_id mass = CreateSphereEntity(registry, { x, y, 0 }, math::random::unit_quaternion<f32>(), pin);
-				spheres.push_back(mass);
 
-				if (y == 8)
+				if (x != 0)
 				{
-					CreateConstraintEntity(registry, 0.5f, mass, spheres[spheres.size() - 1]);
+					CreateConstraintEntity(registry, 2.f, mass, spheres.back());
 				}
-				//if (x != 0)
-				//{
-				//	CreateConstraintEntity(registry, 2.f, mass, spheres[spheres.size() - 25]);
-				//}
+
+				if (y != 0)
+				{
+					CreateConstraintEntity(registry, 2.f, mass, spheres[spheres.size() - 7]);
+				}
+				spheres.push_back(mass);
 			}
 		}
 
-		//entity_id massA = CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>(), true);
-		//entity_id massB = CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>(), false);
-		//entity_id massC = CreateSphereEntity(registry, 8.0f * math::random::unit_ball<f32>(), math::random::unit_quaternion<f32>(), false);
-		//CreateConstraintEntity(registry, 4.f, massA, massB);
-		//CreateConstraintEntity(registry, 4.f, massB, massC);
-		//CreateConstraintEntity(registry, 4.f, massC, massA);
+		/*entity_id massA = CreateSphereEntity(registry, {0, 0, 0}, math::random::unit_quaternion<f32>(), false);
+		entity_id massB = CreateSphereEntity(registry, {0, 2, 0}, math::random::unit_quaternion<f32>(), false);
+		entity_id massC = CreateSphereEntity(registry, {0, 4, 0}, math::random::unit_quaternion<f32>(), false);
+		entity_id massD = CreateSphereEntity(registry, {0, 6, 0}, math::random::unit_quaternion<f32>(), false);
+		entity_id massE = CreateSphereEntity(registry, {0, 8, 0}, math::random::unit_quaternion<f32>(), true);
+
+		entity_id massF = CreateSphereEntity(registry, { 2, 0, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massG = CreateSphereEntity(registry, { 2, 2, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massH = CreateSphereEntity(registry, { 2, 4, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massI = CreateSphereEntity(registry, { 2, 6, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massJ = CreateSphereEntity(registry, { 2, 8, 0 }, math::random::unit_quaternion<f32>(), true);
+
+		entity_id massK = CreateSphereEntity(registry, { 4, 0, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massL = CreateSphereEntity(registry, { 4, 2, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massM = CreateSphereEntity(registry, { 4, 4, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massN = CreateSphereEntity(registry, { 4, 6, 0 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massO = CreateSphereEntity(registry, { 4, 8, 0 }, math::random::unit_quaternion<f32>(), true);
+		CreateConstraintEntity(registry, 2.f, massA, massB);
+		CreateConstraintEntity(registry, 2.f, massB, massC);
+		CreateConstraintEntity(registry, 2.f, massC, massD);
+		CreateConstraintEntity(registry, 2.f, massD, massE);
+
+		CreateConstraintEntity(registry, 2.f, massF, massG);
+		CreateConstraintEntity(registry, 2.f, massG, massH);
+		CreateConstraintEntity(registry, 2.f, massH, massI);
+		CreateConstraintEntity(registry, 2.f, massI, massJ);
+
+		CreateConstraintEntity(registry, 2.f, massA, massF);
+		CreateConstraintEntity(registry, 2.f, massB, massG);
+		CreateConstraintEntity(registry, 2.f, massC, massH);
+		CreateConstraintEntity(registry, 2.f, massD, massI);
+
+		CreateConstraintEntity(registry, 2.f, massK, massL);
+		CreateConstraintEntity(registry, 2.f, massL, massM);
+		CreateConstraintEntity(registry, 2.f, massM, massN);
+		CreateConstraintEntity(registry, 2.f, massN, massO);
+
+		CreateConstraintEntity(registry, 2.f, massF, massK);
+		CreateConstraintEntity(registry, 2.f, massG, massL);
+		CreateConstraintEntity(registry, 2.f, massH, massM);
+		CreateConstraintEntity(registry, 2.f, massI, massN);*/
 	}
 }
 
