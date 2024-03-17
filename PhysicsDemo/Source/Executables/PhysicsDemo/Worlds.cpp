@@ -119,6 +119,7 @@ namespace jm
 				spheres.push_back(mass);
 			}
 		}
+		spheres.clear();
 		for (int y = 0; y < 20; ++y)
 		{
 			bool pin = y == 19;
@@ -130,6 +131,12 @@ namespace jm
 			}
 			spheres.push_back(mass);
 		}
+		
+		/*entity_id massHead = CreateSphereEntity(registry, 0.5f, 2.f, { 5, 5, -5 }, math::random::unit_quaternion<f32>(), false);
+		entity_id massPelvis = CreateSphereEntity(registry, 0.1f, 2.f, { 5, 3, -5 }, math::random::unit_quaternion<f32>(), false);
+		CreateConstraintEntity(registry, 2.f, massHead, massPelvis);
+		entity_id massLeftElbow = CreateSphereEntity(registry, 0.5f, 2.f, { 5, 5, -5 }, math::random::unit_quaternion<f32>(), false);*/
+
 	}
 }
 
