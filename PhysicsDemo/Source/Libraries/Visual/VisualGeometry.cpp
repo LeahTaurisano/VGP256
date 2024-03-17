@@ -677,7 +677,7 @@ namespace jm
 			return GenerateSphere(layout, diameter, 20, 18);
 		}
 
-		RawBuffer GenerateLines(const InputLayout& layout, std::vector<math::vector2_f32> lines)
+		RawBuffer GenerateLines(const InputLayout& layout, std::vector<math::vector3_f32> lines)
 		{
 			RawBuffer vertexList{ };
 			for (size_t idx = 0; idx < lines.size(); idx += 2)

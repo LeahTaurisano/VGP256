@@ -31,10 +31,6 @@ namespace jm::System
 			GLsizei squareVertices;
 			GLsizei diskVertices;
 			GLsizei axesVertices;
-
-
-			OpenGL::InputLayoutHandle linesLayoutHandle;
-			OpenGL::InputBufferHandle linesBufferHandle;
 		};
 
 		struct Data3D
@@ -47,6 +43,9 @@ namespace jm::System
 			GLsizei cubeVertices;
 			GLsizei sphereVertices;
 			GLsizei axesVertices;
+
+			OpenGL::InputLayoutHandle linesLayoutHandle;
+			OpenGL::InputBufferHandle linesBufferHandle;
 		};
 
 

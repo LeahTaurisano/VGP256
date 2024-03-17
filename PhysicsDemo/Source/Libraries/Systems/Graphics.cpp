@@ -93,7 +93,7 @@ namespace jm::System
 			TwoDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			TwoDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.inputLayoutHandle, inputVertexData);
 
-			TwoDimensional.linesLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
+			ThreeDimensional.linesLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 		}
 		{
 			Visual::InputLayout layout{ { 3, 3 } };
@@ -189,12 +189,17 @@ namespace jm::System
 				cubeInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation) * math::scale_matrix3(shape.extents));
 			}
 		}
-
-
-		std::vector<math::vector2_f32> lines;
-		lines.push_back(math::vector2_f32{ 0.f });
-		lines.push_back(math::vector2_f32{ 1.f });
-
+		std::vector<math::vector3_f32> lines;
+		{
+			auto constraint_lines_view = EntityRegistry.view<const constraint_component>();
+			for (auto&& [entity, constraint] : constraint_lines_view.each())
+			{
+				spatial3_component& massAPos = EntityRegistry.get<spatial3_component>(constraint.massA);
+				spatial3_component& massBPos = EntityRegistry.get<spatial3_component>(constraint.massB);
+				lines.push_back(massAPos.position);
+				lines.push_back(massBPos.position);
+			}
+		}
 
 		Renderer.RasterizerImpl->PrepareRenderBuffer(ClearColour);
 
@@ -224,6 +229,13 @@ namespace jm::System
 				ThreeDimensional.Program.SetUniform("model", math::identity4);
 				glDrawArrays(GL_LINES, start, ThreeDimensional.axesVertices);
 			}
+
+			//draw lines in world space
+			Visual::InputLayout layout{ {3, 3} };
+			auto linesVertexData = Visual::GenerateLines(layout, lines);
+			ThreeDimensional.linesBufferHandle = Renderer.RasterizerMemory->createInputBuffer(ThreeDimensional.linesLayoutHandle, linesVertexData.data);
+			ThreeDimensional.Program.SetUniform("model", math::identity4);
+			glDrawArrays(GL_LINES, 0, (GLsizei)linesVertexData.size);
 		}
 
 
@@ -254,12 +266,6 @@ namespace jm::System
 				TwoDimensional.Program.SetUniform("model", math::identity3);
 				glDrawArrays(GL_LINES, start, TwoDimensional.axesVertices);
 			}
-			//draw lines in wolrd space
-			Visual::InputLayout layout{ {2, 3 } };
-			auto linesVertexData = Visual::GenerateLines(layout, lines);
-			TwoDimensional.linesBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.linesLayoutHandle, linesVertexData.data);
-			TwoDimensional.Program.SetUniform("model", math::identity3);
-			glDrawArrays(GL_LINES, 0, (GLsizei)linesVertexData.size);
 		}
 
 		Renderer.ImGuiContextPtr->RunFrame(std::move(imguiFrame));

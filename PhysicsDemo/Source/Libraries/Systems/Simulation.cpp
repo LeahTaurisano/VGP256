@@ -22,8 +22,8 @@ namespace jm
 			}
 		}
 		{
-			auto lin_sim_view = registry.view<spatial3_component, linear_body3_component, pinned_component>();
-			for (auto&& [entity, spatial, linear, pinned] : lin_sim_view.each())
+			auto lin_sim_view = registry.view<spatial3_component, linear_body3_component, pinned_component, sphere_shape_component>();
+			for (auto&& [entity, spatial, linear, pinned, sphere] : lin_sim_view.each())
 			{
 				if (!pinned.isPinned)
 				{
@@ -31,6 +31,11 @@ namespace jm
 					math::euler_integration(linear.velocity, acceleration, delta_time);
 					linear.velocity *= Damping;
 					math::euler_integration(spatial.position, linear.velocity, delta_time);
+
+					if (spatial.position.y < 0 + sphere.radius)
+					{
+						spatial.position = { spatial.position.x, sphere.radius, spatial.position.z };
+					}
 				}
 			}
 		}
@@ -82,31 +87,37 @@ namespace jm
 				}
 			}
 
-			auto constraints_rigid = registry.view<constraint_component_rigid>();
-			for (auto&& [entity, constraint] : constraints_rigid.each())
+			for (int i = 0; i < 12; ++i) //relaxation, apply multiple times
 			{
-				spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
-				spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
-				pinned_component& massAPin = registry.get<pinned_component>(constraint.massA);
-				pinned_component& massBPin = registry.get<pinned_component>(constraint.massB);
-				for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
+				auto constraints_rigid = registry.view<constraint_component_rigid>();
+				for (auto&& [entity, constraint] : constraints_rigid.each())
 				{
+					spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
+					spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
+					pinned_component& massAPin = registry.get<pinned_component>(constraint.massA);
+					pinned_component& massBPin = registry.get<pinned_component>(constraint.massB);
+
 					const math::vector3_f32 dist = massAPos.position - massBPos.position;
-					const math::vector3_f32 midpoint = (massAPos.position + massBPos.position) / 2.0f;
+					f32 d = length(dist);
+					if (d > (3.f * constraint.linkDistance))
+					{
+						registry.destroy(entity);
+					}
 					const math::vector3_f32 dir = normalize(dist);
 
 					if (!massBPin.isPinned && !massAPin.isPinned)
 					{
+						const math::vector3_f32 midpoint = (massAPos.position + massBPos.position) / 2.0f;
 						massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
 						massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
 					}
 					else if (massBPin.isPinned)
 					{
-						massAPos.position = 0.5f * dir * constraint.linkDistance + midpoint;
+						massAPos.position = dir * constraint.linkDistance + massBPos.position;
 					}
 					else if (massAPin.isPinned)
 					{
-						massBPos.position = -(0.5f * dir * constraint.linkDistance) + midpoint;
+						massBPos.position = -(dir * constraint.linkDistance) + massAPos.position;
 					}
 				}
 			}

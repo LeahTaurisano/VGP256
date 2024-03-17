@@ -18,5 +18,5 @@ namespace jm::Visual
 
 	RawBuffer GenerateSphere(const InputLayout& layout, f32 diameter = 2.0f);
 
-	RawBuffer GenerateLines(const InputLayout& layout, std::vector<math::vector2_f32> lines);
+	RawBuffer GenerateLines(const InputLayout& layout, std::vector<math::vector3_f32> lines);
 }
