@@ -189,18 +189,19 @@ namespace jm::System
 				cubeInstances.push_back(math::isometry_matrix3(spatial.position, spatial.orientation) * math::scale_matrix3(shape.extents));
 			}
 		}
+		//===============================================================================================
 		std::vector<math::vector3_f32> lines;
-		//{
-		//	auto constraint_lines_view = EntityRegistry.view<const constraint_component_rigid>();
-		//	for (auto&& [entity, constraint] : constraint_lines_view.each())
-		//	{
-		//		spatial3_component massAPos = EntityRegistry.get<spatial3_component>(constraint.massA);
-		//		spatial3_component massBPos = EntityRegistry.get<spatial3_component>(constraint.massB);
-		//		lines.push_back(massAPos.position);
-		//		lines.push_back(massBPos.position);
-		//	}
-		//}
-
+		{
+			auto constraint_lines_view = EntityRegistry.view<const constraint_component_rigid>();
+			for (auto&& [entity, constraint] : constraint_lines_view.each())
+			{
+				spatial3_component massAPos = EntityRegistry.get<spatial3_component>(constraint.massA);
+				spatial3_component massBPos = EntityRegistry.get<spatial3_component>(constraint.massB);
+				lines.push_back(massAPos.position);
+				lines.push_back(massBPos.position);
+			}
+		}
+		//===============================================================================================
 		Renderer.RasterizerImpl->PrepareRenderBuffer(ClearColour);
 
 		{
