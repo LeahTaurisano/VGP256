@@ -69,11 +69,12 @@ namespace jm
 
 	entity_id CreateConstraintEntity(entity_registry& registry
 		, f32 linkDistance
+		, f32 breakThreshold
 		, entity_id massA
 		, entity_id massB)
 	{
 		auto entity = registry.create();
-		registry.emplace<constraint_component_rigid>(entity, linkDistance, massA, massB);
+		registry.emplace<constraint_component_rigid>(entity, linkDistance, breakThreshold, massA, massB);
 		return entity;
 	}
 
@@ -89,12 +90,12 @@ namespace jm
 
 		//		if (x != 0)
 		//		{
-		//			CreateConstraintEntity(registry, 1.f, mass, spheres.back());
+		//			CreateConstraintEntity(registry, 1.f, 3.f, mass, spheres.back());
 		//		}
 
 		//		if (y != 0)
 		//		{
-		//			CreateConstraintEntity(registry, 1.f, spheres[spheres.size() - 10], mass);
+		//			CreateConstraintEntity(registry, 1.f, 3.f, spheres[spheres.size() - 10], mass);
 		//		}
 		//		spheres.push_back(mass);
 		//	}
@@ -109,12 +110,12 @@ namespace jm
 
 				if (x != 0)
 				{
-					CreateConstraintEntity(registry, 1.f, mass, spheres.back());
+					CreateConstraintEntity(registry, 1.f, 10.f, mass, spheres.back());
 				}
 
 				if (z != 0)
 				{
-					CreateConstraintEntity(registry, 1.f, spheres[spheres.size() - 10], mass);
+					CreateConstraintEntity(registry, 1.f, 10.f, spheres[spheres.size() - 10], mass);
 				}
 				spheres.push_back(mass);
 			}
@@ -127,14 +128,14 @@ namespace jm
 			
 			if (y != 0)
 			{
-				CreateConstraintEntity(registry, 1.f, mass, spheres.back());
+				CreateConstraintEntity(registry, 1.f, 3.f, mass, spheres.back());
 			}
 			spheres.push_back(mass);
 		}
 		
 		/*entity_id massHead = CreateSphereEntity(registry, 0.5f, 2.f, { 5, 5, -5 }, math::random::unit_quaternion<f32>(), false);
 		entity_id massPelvis = CreateSphereEntity(registry, 0.1f, 2.f, { 5, 3, -5 }, math::random::unit_quaternion<f32>(), false);
-		CreateConstraintEntity(registry, 2.f, massHead, massPelvis);
+		CreateConstraintEntity(registry, 2.f, 3.f, massHead, massPelvis);
 		entity_id massLeftElbow = CreateSphereEntity(registry, 0.5f, 2.f, { 5, 5, -5 }, math::random::unit_quaternion<f32>(), false);*/
 
 	}

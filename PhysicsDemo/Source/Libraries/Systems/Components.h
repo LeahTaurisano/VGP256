@@ -43,6 +43,7 @@ namespace jm
 	struct constraint_component_rigid
 	{
 		f32 linkDistance;
+		f32 breakThreshold;
 
 		entity_id massA;
 		entity_id massB;

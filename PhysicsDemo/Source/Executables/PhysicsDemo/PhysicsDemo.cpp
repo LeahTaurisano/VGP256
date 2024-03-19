@@ -22,6 +22,7 @@ namespace jm
 {
 	constexpr math::vector2<iSize> screenSize = { 1600, 900 };
 	constexpr math::vector2_f32 screenSizeFloat = { f32(screenSize.x), f32(screenSize.y) };
+	math::vector3_f32 wind_force = { 0.f, 0.f, 0.f };
 
 	struct LoopController final
 	{
@@ -158,6 +159,7 @@ namespace jm
 						DestroyWorld();
 						CreateWorld();
 					}
+					ImGui::DragFloat3("WindForce", &wind_force.x, 0.1f, -100.f, 100.f);
 
 					GraphicsSystem.ImGuiDebug();
 
@@ -242,7 +244,7 @@ namespace jm
 
 		void SimulationUpdate()
 		{
-			integrate(registry, static_cast<f32>(LoopController::FixedTick_Period));
+			integrate(registry, static_cast<f32>(LoopController::FixedTick_Period), wind_force);
 		}
 
 		entity_registry registry;

@@ -9,7 +9,7 @@ namespace jm
 	constexpr math::vector3<f32> Gravity = { 0.f, -9.81f, 0.f };
 	constexpr math::vector2<f32> Gravity2 = { Gravity.x, Gravity.y };
 
-	void integrate(entity_registry& registry, f32 delta_time)
+	void integrate(entity_registry& registry, f32 delta_time, math::vector3<f32> wind_force)
 	{
 		{
 			auto lin_sim_view = registry.view<spatial2_component, linear_body2_component>();
@@ -27,7 +27,7 @@ namespace jm
 			{
 				if (!pinned.isPinned)
 				{
-					math::vector3_f32 acceleration = Gravity + linear.applied_force * linear.inverse_mass;
+					math::vector3_f32 acceleration = Gravity + wind_force + linear.applied_force * linear.inverse_mass;
 					math::euler_integration(linear.velocity, acceleration, delta_time);
 					linear.velocity *= Damping;
 					math::euler_integration(spatial.position, linear.velocity, delta_time);
@@ -66,27 +66,28 @@ namespace jm
 				}
 			}
 		}
+		//{
+		//	auto constraints = registry.view<constraint_component>();
+		//	for (auto&& [entity, constraint] : constraints.each())
+		//	{
+		//		spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
+		//		spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
+		//		for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
+		//		{
+		//			const math::vector3_f32 dist = massAPos.position - massBPos.position;
+		//			const math::vector3_f32 dir = normalize(dist);
+		//			f32 d = length(dist);
+
+		//			f32 difference = std::abs(constraint.linkDistance - d) * 0.95f;
+
+		//			math::vector3_f32 translate = dir * 0.5f * difference;
+
+		//			massAPos.position -= translate;
+		//			massBPos.position += translate;
+		//		}
+		//	}
+		//}
 		{
-			auto constraints = registry.view<constraint_component>();
-			for (auto&& [entity, constraint] : constraints.each())
-			{
-				spatial3_component& massAPos = registry.get<spatial3_component>(constraint.massA);
-				spatial3_component& massBPos = registry.get<spatial3_component>(constraint.massB);
-				for (int i = 0; i < 3; ++i) //relaxation, apply multiple times
-				{
-					const math::vector3_f32 dist = massAPos.position - massBPos.position;
-					const math::vector3_f32 dir = normalize(dist);
-					f32 d = length(dist);
-
-					f32 difference = std::abs(constraint.linkDistance - d) * 0.95f;
-
-					math::vector3_f32 translate = dir * 0.5f * difference;
-
-					massAPos.position -= translate;
-					massBPos.position += translate;
-				}
-			}
-
 			for (int i = 0; i < 12; ++i) //relaxation, apply multiple times
 			{
 				auto constraints_rigid = registry.view<constraint_component_rigid>();
@@ -98,8 +99,8 @@ namespace jm
 					pinned_component& massBPin = registry.get<pinned_component>(constraint.massB);
 
 					const math::vector3_f32 dist = massAPos.position - massBPos.position;
-					f32 d = length(dist);
-					if (d > (3.f * constraint.linkDistance))
+					f32 magnitude = length(dist);
+					if (magnitude > (constraint.breakThreshold * constraint.linkDistance))
 					{
 						registry.destroy(entity);
 					}
