@@ -92,8 +92,6 @@ namespace jm::System
 			TwoDimensional.Program.MakeActive();
 			TwoDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			TwoDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(TwoDimensional.inputLayoutHandle, inputVertexData);
-
-			ThreeDimensional.linesLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 		}
 		{
 			Visual::InputLayout layout{ { 3, 3 } };
@@ -118,6 +116,8 @@ namespace jm::System
 			ThreeDimensional.Program.MakeActive();
 			ThreeDimensional.inputLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 			ThreeDimensional.inputBufferHandle = Renderer.RasterizerMemory->createInputBuffer(ThreeDimensional.inputLayoutHandle, inputVertexData);
+
+			ThreeDimensional.linesLayoutHandle = Renderer.RasterizerMemory->createInputLayout(layout);
 		}
 
 		glEnable(GL_DEPTH_TEST);

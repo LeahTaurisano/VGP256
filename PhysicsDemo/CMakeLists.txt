@@ -220,8 +220,6 @@ set( SystemsSourceList
 "${SYSTEMS_MODULE_DIR}/Components.h"
 "${SYSTEMS_MODULE_DIR}/Collision.h"
 "${SYSTEMS_MODULE_DIR}/Collision.cpp"
-"${SYSTEMS_MODULE_DIR}/Constraints.h"
-"${SYSTEMS_MODULE_DIR}/Constraints.cpp"
 )
 
 add_library(Systems ${SystemsSourceList})

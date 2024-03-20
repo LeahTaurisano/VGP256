@@ -9,7 +9,7 @@ namespace jm
 	constexpr math::vector3<f32> Gravity = { 0.f, -9.81f, 0.f };
 	constexpr math::vector2<f32> Gravity2 = { Gravity.x, Gravity.y };
 
-	void integrate(entity_registry& registry, f32 delta_time, math::vector3<f32> wind_force)
+	void integrate(entity_registry& registry, f32 delta_time, math::vector3<f32> wind_force, math::vector3<f32> wall_boundaries_min, math::vector3<f32> wall_boundaries_max)
 	{
 		{
 			auto lin_sim_view = registry.view<spatial2_component, linear_body2_component>();
@@ -21,7 +21,7 @@ namespace jm
 				math::euler_integration(spatial.position, linear.velocity, delta_time);
 			}
 		}
-		{
+		{	
 			auto lin_sim_view = registry.view<spatial3_component, linear_body3_component, pinned_component, sphere_shape_component>();
 			for (auto&& [entity, spatial, linear, pinned, sphere] : lin_sim_view.each())
 			{
@@ -32,9 +32,31 @@ namespace jm
 					linear.velocity *= Damping;
 					math::euler_integration(spatial.position, linear.velocity, delta_time);
 
-					if (spatial.position.y < 0 + sphere.radius)
+					if (spatial.position.y < wall_boundaries_min.y + sphere.radius)
 					{
-						spatial.position = { spatial.position.x, sphere.radius, spatial.position.z };
+						spatial.position = { spatial.position.x, wall_boundaries_min.y + sphere.radius, spatial.position.z };
+					}
+					else if (spatial.position.y > wall_boundaries_max.y - sphere.radius)
+					{
+						spatial.position = { spatial.position.x, wall_boundaries_max.y - sphere.radius, spatial.position.z };
+					}
+
+					if (spatial.position.x < wall_boundaries_min.x + sphere.radius)
+					{
+						spatial.position = { wall_boundaries_min.x + sphere.radius, spatial.position.y, spatial.position.z };
+					}
+					else if (spatial.position.x > wall_boundaries_max.x - sphere.radius)
+					{
+						spatial.position = { wall_boundaries_max.x - sphere.radius, spatial.position.y, spatial.position.z };
+					}
+
+					if (spatial.position.z < wall_boundaries_min.z + sphere.radius)
+					{
+						spatial.position = { spatial.position.x, spatial.position.y, wall_boundaries_min.z + sphere.radius };
+					}
+					else if (spatial.position.z > wall_boundaries_max.z - sphere.radius)
+					{
+						spatial.position = { spatial.position.x, spatial.position.y, wall_boundaries_max.z - sphere.radius };
 					}
 				}
 			}
